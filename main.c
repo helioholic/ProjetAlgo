@@ -10,6 +10,7 @@
 
 
 
+
 ///Structure de button
 
 typedef struct Button{
@@ -230,6 +231,8 @@ void insertion(arbre * a, int val){
 
 //---------------------------------------
 
+
+
 ///Avec appel recursif :
 
   void inserer(arbre* a, int val, arbre pere) {
@@ -402,7 +405,7 @@ void supprimer (arbre * a, int val, arbre pere){
 
 //-----------------------------------
 
-void drawNode(arbre a, float x, float y, float xOffset) {
+/**void drawNode(arbre a, float x, float y, float xOffset) {
     // Draw the node
     DrawText(TextFormat("%d", a->info), x, y, 20, MAROON);
 
@@ -416,14 +419,17 @@ void drawNode(arbre a, float x, float y, float xOffset) {
         DrawLine(x + 10, y + 30, x + xOffset, y + 80, BLACK);  // Right branch
         drawNode(a->fd, x + xOffset, y + 80, xOffset / 2);
     }
-}
+}**/
+
+
 
 //--------------------------------------------------------------------------------
 
-void drawTree(arbre a, float x, float y) {
+/*void drawTree(arbre a, float x, float y) {
     if (!ArbreVide(a)) {
         // Draw the root node
         DrawText(TextFormat("%d", a->info), x, y, 20, MAROON);
+
 
         // Draw lines to its children
         if (a->fg != NULL) {
@@ -436,7 +442,38 @@ void drawTree(arbre a, float x, float y) {
             drawNode(a->fd, x + 50, y + 80, 25);
         }
     }
+}*/
+
+
+void drawTree(arbre a, float x, float y, float xOffset) {
+    if (!ArbreVide(a)) {
+        // Draw the node
+        float radius = 40.0f;
+
+        for (int i = 0; i < 36; ++i) {
+            float angle = (float)i * 0.1f;
+            DrawCircleLines(x , y , radius + angle, MAROON);
+        }
+
+        DrawCircle(x, y, radius, WHITE);
+        DrawText(TextFormat("%d", a->info),x - MeasureText(TextFormat("%d", a->info), 20) / 2 , y - 20 / 2 , 20, MAROON);
+       // DrawText(TextFormat("%d", a->info), x - 15, y - 10, 20, MAROON);
+
+        // Draw lines to its children
+        if (a->fg != NULL) {
+            DrawLine(x, y, x - xOffset, y + 80, BLACK);  // Left branch
+            drawTree(a->fg, x - xOffset, y + 80, xOffset / 1.5);
+        }
+
+        if (a->fd != NULL) {
+
+            DrawLine(x, y, x + xOffset, y + 80, BLACK);  // Right branch
+            drawTree(a->fd, x + xOffset, y + 80, xOffset / 1.5);
+        }
+    }
 }
+
+
 //-----------------------------------------------------------------------------------------
 
 ///Booleen pour indiquer le passage par boutton
@@ -591,7 +628,7 @@ int main(void) {
         }
 
        // DrawFPS(10, 10);
-       drawTree(R, width / 2, 100);
+        drawTree(R, GetScreenWidth() / 2, 50, 150);
         EndDrawing();
     }
 

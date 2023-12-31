@@ -7,7 +7,7 @@
 #define MAX_INPUT_CHARS     4
 #include <time.h>
 
-
+ //test
 
 
 
@@ -236,31 +236,31 @@ void insertion(arbre * a, int val){
 ///Avec appel recursif :
 
   void inserer(arbre* a, int val, arbre pere) {
-    // dans le cas où l'arbre n'est pas vide
+    // dans le cas oï¿½ l'arbre n'est pas vide
     if (!ArbreVide(*a)) {
-        // si la valeur existe déjà on ne va pas l'insérer car on est dans un arbre de recherche
+        // si la valeur existe dï¿½jï¿½ on ne va pas l'insï¿½rer car on est dans un arbre de recherche
         if ((*a)->info == val)
-            printf("\nLa valeur existe Déjà\n");
-        // si la valeur n'existe pas dans l'arbre de recherche, on va l'insérer
+            printf("\nLa valeur existe Dï¿½jï¿½\n");
+        // si la valeur n'existe pas dans l'arbre de recherche, on va l'insï¿½rer
         else {
-            // si elle est inférieure à la racine, l'insertion est à gauche
+            // si elle est infï¿½rieure ï¿½ la racine, l'insertion est ï¿½ gauche
             if ((*a)->info>val){
                 inserer(&((*a)->fg), val, *a);
             }
-            // si elle est supérieure à la racine, l'insertion est à droite
+            // si elle est supï¿½rieure ï¿½ la racine, l'insertion est ï¿½ droite
             else {
                  inserer(&((*a)->fd), val, *a);
             }
         }
     }
-    // dans le cas où l'arbre est vide
+    // dans le cas oï¿½ l'arbre est vide
     else {
-        // si le père qui est en entrée (input) n'existe pas (nul)
+        // si le pï¿½re qui est en entrï¿½e (input) n'existe pas (nul)
         if (ArbreVide(pere)) {
             *a = creer_noeud(val);
             //racine
         }
-        // sinon si le père qui est en entrée (input) existe
+        // sinon si le pï¿½re qui est en entrï¿½e (input) existe
         else {
             if (pere->info > val) {
                 pere->fg = creer_noeud(val);
@@ -321,7 +321,7 @@ void supprimer (arbre * a, int val, arbre pere){
                  else {pere->fd=NULL; free(*a);}
               }
 
-             ///cas2 : noeud possède un seul fils : fils droit, ie: le fils droit est vide
+             ///cas2 : noeud possï¿½de un seul fils : fils droit, ie: le fils droit est vide
               if (ArbreVide(fils_Gauche(*a))){
                   if(pere->fg==*a)
                     {pere->fg=fils_Droit(*a); free(*a);}
@@ -330,7 +330,7 @@ void supprimer (arbre * a, int val, arbre pere){
               }
 
 
-             ///cas3 : noeud possède un seul fils : fils gauche,  ie: le fils gauc est vide
+             ///cas3 : noeud possï¿½de un seul fils : fils gauche,  ie: le fils gauc est vide
              if (ArbreVide(fils_Droit(*a))){
                  if (pere->fg==*a){pere->fg=fils_Gauche(*a); free(*a);}
                  else {pere->fd=fils_Gauche(*a); free(*a);}

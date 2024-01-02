@@ -306,9 +306,13 @@ arbre Creer_Arbre(int max){
     srand(time(NULL));   // Initialization, should only be called once.
 
     for (i=0; i<=max ; i++ ){
+
+
         val= rand();
         insertion(&r, val);
     }
+
+    return r;
 }
 
 //-----------------------------------------------------------------------------------------
@@ -925,7 +929,7 @@ int main(void) {
        // Draw button text
         if(button_creer.pressed){
 
-                int max = atoi(BarreInsere.text);
+                int max = atoi(BarreCreer.text);
 
 
                 // Call the inserer function with the obtained value

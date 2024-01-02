@@ -1,39 +1,147 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "Arbres_Bibio.h"
 #include "raylib.h"
 #define MAX_INPUT_CHARS     4
+#define  RADIUS     30.0f
 #include <time.h>
 
- //test
 
+void DrawArrow(Vector2 startPoint, Vector2 endPoint, Color col){
 
+   // Dessin de la ligne
+    DrawLineEx(startPoint, endPoint, 4, col);
+
+    // Coordonnees des pointeur de fleches qui sont de cette forme ">":
+    float angle = atan2f(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+    Vector2 arrowhead1 = {
+        endPoint.x - 20 * cosf(angle + PI/6),
+        endPoint.y - 10 * sinf(angle + PI/6)
+    };
+
+    Vector2 arrowhead2 = {
+        endPoint.x - 20 * cosf(angle - PI/6),
+        endPoint.y - 20 * sinf(angle - PI/6)
+    };
+
+    // dessin de la forme ">":
+    DrawLineEx(arrowhead1, endPoint, 4, col);
+    DrawLineEx(arrowhead2, endPoint, 4, col);
+}
+
+//-----------------------------------------------------------------------------------------
 
 ///Structure de button
 
 typedef struct Button{
 Rectangle rect;
 Color color;
-float pressTimer;
+bool pressed;
 }Button;
 
-//-----------------------------------
+//-----------------------------------------------------------------------------------------
+
+///Structure du textField
+
+typedef struct textField{
+Rectangle textBox;
+Color color;
+char text[20];
+bool mouseOn;
+}textField;
+
+
+///Structures de graphiques:
+typedef struct Node{
+Vector2 centre ;
+float rayon;
+Color col;
+}Node;
+
+typedef struct Branch{
+Vector2 start;
+Vector2 end;
+}Branch;
+
+
+//-----------------------------------------------------------------------------------------
 
 typedef struct noeud noeud;
 typedef struct noeud
 {
     int info;
-    struct noeud* fd;
-    struct noeud* fg;
+    struct noeud* fd; //fils (branch) droit
+    struct noeud* fg; // fils (branch) gauche
+    struct noeud* pere; //le pere
+    Node noeudshape;
+    Branch BrancheDroite;
+    Branch BrancheGauche;
 };
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
+
 
 typedef noeud* arbre;
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
+
+
+///Dessiner le noeud d'un arbre
+void DessinerNoeud(arbre * R, float x, float y, Color couleur ){
+
+Vector2 point={x,y};
+    //Affecter les valeurs / coordonnees necessaires
+    (*R)->noeudshape.col=couleur;
+    (*R)->noeudshape.rayon=RADIUS; ///this is a constant
+    (*R)->noeudshape.centre=point;
+
+    //Dessiner le circle:
+    /*DrawCircle(int centerX, int centerY, float radius, Color color);*/
+    DrawCircle(x, y, RADIUS, couleur );
+
+    //dessiner le text:
+    /*On dessine le texte de telle sorte qu'il soit au milieu du circle*/
+    /*pour cela , voila en general l'appel de la fonction*/
+    /*DrawText(text,Center_x - MeasureText(text, taillePolice) / 2 , y - taillePolice / 2 , taillePolice, MAROON);*/
+    /*TextFormat est pour obtenir cette variable "a->info" en format textuel*/
+
+    for (int i = 0; i < 20; ++i) {
+            float angle = (float)i * 0.1f;
+            DrawCircleLines(x , y , RADIUS + angle, MAROON);
+        }
+      DrawText(TextFormat("%d", (*R)->info),x - MeasureText(TextFormat("%d", (*R)->info), 20) / 2 , y - 20 / 2 , 20, MAROON);
+
+}
+
+//-----------------------------------------------------------------------------------------
+
+
+///Fonction qui effectue le dessin de la branche :
+
+void DessinerBranche(arbre* R, float Offset){
+
+    Vector2 startpoint, endpoint;
+
+   float  x=(*R)->noeudshape.centre.x;
+    float y=(*R)->noeudshape.centre.y;
+
+    startpoint=(Vector2) {x, y};
+
+       if ((*R)->fg!=NULL) {
+        endpoint=(Vector2){ x - Offset, y + 80};
+        DrawArrow(startpoint, endpoint, BLACK) ;
+        }
+
+      if ((*R)->fd!=NULL) {
+        endpoint=(Vector2){ x + Offset, y + 80};
+        DrawArrow(startpoint, endpoint, BLACK) ;
+        }
+
+}
+
+//-----------------------------------------------------------------------------------------
 
 ///Verifier si un noeud est vide:
 int ArbreVide(arbre a){
@@ -41,7 +149,7 @@ int ArbreVide(arbre a){
         else return 0;
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 ///Retourner le Fils_Gauche (adresse):
 
@@ -49,7 +157,7 @@ arbre fils_Gauche(arbre a){
     return a->fg;
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 ///Retourner le Fils_Droit (adresse):
 
@@ -57,7 +165,15 @@ arbre fils_Droit(arbre a){
     return a->fd;
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
+
+///Retourner le Pere (adresse):
+
+arbre Pere(arbre a){
+    return a->pere;
+}
+
+//-----------------------------------------------------------------------------------------
 
 ///Verfifier si un noeud a est une feuille:
 
@@ -67,7 +183,7 @@ int feuille (arbre a){
     return(0) ;
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 /**Les Parcours**/
 
@@ -85,7 +201,7 @@ void prefixe (arbre a){
     }
   }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 //test
 
 ///Infixe (Inordre) (Fils_Gauche --> Noeud --> Fils_Droit )
@@ -94,13 +210,14 @@ void infixe(arbre a) {
     if (ArbreVide(a)==0) {
         // 1er appel recursif
         infixe(fils_Gauche(a)); // fils_Gauche
-        printf("| %d |", a->info); // noeud (racine)
+        printf("\n %d |", a->info); // noeud (racine)
+        if(Pere(a)!=NULL) printf("\nLe pere de %d est %d", a->info, Pere(a)->info );
         // 2eme appel recursif
         infixe(fils_Droit(a)); // fils_Droit
     }
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 ///Postfixe (Postordre) (Fils_Gauche --> Fils_Droit  --> Noeud)
     void postfixe (arbre a){
@@ -118,7 +235,7 @@ void infixe(arbre a) {
     }
   }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 int nombre_de_noeuds ( arbre a ) {
 if (a==NULL) return 0 ;
@@ -127,7 +244,7 @@ return ( 1 + nombre_de_noeuds ( a->fg )
 }
 
 
-//-----------------------------------
+//-----------------------------------------------------------------------------------------
 
 ///Recherche dans un arbre binaire ordonne, Elle retourne une adresse ( le pointeur qui contient var)
 
@@ -144,7 +261,7 @@ arbre recherche_pointeur(arbre a, int val){
     }
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 ///Recherche dans un arbre binaire ordonne, Elle retourne un booleen
 
@@ -161,7 +278,7 @@ int recherche(arbre a, int val){
     }
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 /**Insertion dans un arbre binaire ordonne**/
 
@@ -173,18 +290,36 @@ arbre creer_noeud(int val){
   p= (arbre)malloc(sizeof(noeud));
   p->fg=NULL;
   p->fd=NULL;
+  p->pere=NULL;
   p->info=val;
   return p;
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
+
+///Creation
+
+arbre Creer_Arbre(int max){
+    int i, val;
+    arbre r=NULL;
+
+    srand(time(NULL));   // Initialization, should only be called once.
+
+    for (i=0; i<=max ; i++ ){
+        val= rand();
+        insertion(&r, val);
+    }
+}
+
+//-----------------------------------------------------------------------------------------
+
 
 ///Insertion d'un noeud
 
 ///Sans Appel Recursif :
 
 void insertion(arbre * a, int val){
-     int insert; arbre r;
+     int insert; arbre r; //father=NULL;
      insert=0;
      r=*a;
 
@@ -192,20 +327,24 @@ void insertion(arbre * a, int val){
      if (recherche(*a, val)==1){printf("Insertion impossible, La Valeur %d existe deja dans l'arbre", val);}
      //sinon, si la valeur n'existe pas :
      else {
+     //si l'arbre est vide
      if ((*a)==NULL){
 
          (*a)=creer_noeud(val);
          insert=1;
          printf("\nRacine created");
+
      }
 
      while(insert==0){
           if (val< r->info){
               if (fils_Gauche(r)==NULL){
                  r->fg=creer_noeud(val);
+                 fils_Gauche(r)->pere=r;
                   insert=1;
                 }
               else{
+                 //father=r;
                  r=fils_Gauche(r);
                 }
                 //printf("\nWORKS1");
@@ -215,6 +354,7 @@ void insertion(arbre * a, int val){
                 if (val>r->info){
                     if (fils_Droit(r)==NULL){
                      r->fd=creer_noeud(val);
+                     fils_Droit(r)->pere=r;
                      insert=1;
                     }
                     else{
@@ -224,12 +364,14 @@ void insertion(arbre * a, int val){
             }
             //printf("\nWORKS2");
         }
-        printf("\nWORKS ALL");
         //printf("\nla nouvelle valeur = %d \n", r->info);
+       // r->pere=father;
+        printf("\nWORKS ALL");
      }
+
     }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 
 
@@ -272,7 +414,7 @@ void insertion(arbre * a, int val){
 }
 
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 /** Suppression d'un noeud dans un arbre :**/
 
@@ -286,7 +428,7 @@ int maximum(arbre a){
       }
 }
 
-//---------------------------------------
+//-----------------------------------------------------------------------------------------
 
 ///Supression d'un noeud
 
@@ -354,8 +496,10 @@ void supprimer (arbre * a, int val, arbre pere){
 
     }
 
+//-----------------------------------------------------------------------------------------
 
 
+///main (test de consol)
 /*int main() {
     int n, x, i;
 
@@ -401,129 +545,192 @@ void supprimer (arbre * a, int val, arbre pere){
 }*/
 
 
+//-----------------------------------------------------------------------------------------
 
 
-//-----------------------------------
+///Fontion du dessin arbre sans changement dynamique des fleches
 
-/**void drawNode(arbre a, float x, float y, float xOffset) {
-    // Draw the node
-    DrawText(TextFormat("%d", a->info), x, y, 20, MAROON);
-
-    // Draw lines to its children
-    if (a->fg != NULL) {
-        DrawLine(x + 10, y + 30, x - xOffset, y + 80, BLACK);  // Left branch
-        drawNode(a->fg, x - xOffset, y + 80, xOffset / 2);
-    }
-
-    if (a->fd != NULL) {
-        DrawLine(x + 10, y + 30, x + xOffset, y + 80, BLACK);  // Right branch
-        drawNode(a->fd, x + xOffset, y + 80, xOffset / 2);
-    }
-}**/
-
-
-
-//--------------------------------------------------------------------------------
-
-/*void drawTree(arbre a, float x, float y) {
+/**void drawTree(arbre a, float x, float y, float xOffset) {
+    Vector2 startpoint, endpoint;
     if (!ArbreVide(a)) {
-        // Draw the root node
-        DrawText(TextFormat("%d", a->info), x, y, 20, MAROON);
-
+        // Draw the node
+        float radius = 30.0f;
 
         // Draw lines to its children
         if (a->fg != NULL) {
-            DrawLine(x + 10, y + 30, x - 50, y + 80, BLACK);  // Left branch
-            drawNode(a->fg, x - 50, y + 80, 25);
+                startpoint=(Vector2) {x, y};
+                endpoint=(Vector2){ x - xOffset, y + 80};
+               DrawArrow(startpoint, endpoint, BLACK) ;
+              //DrawLine(x, y+radius, x - xOffset, y + 80, BLACK);  // Left branch
+              drawTree(a->fg, x - xOffset, y + 80, xOffset );
         }
 
         if (a->fd != NULL) {
-            DrawLine(x + 10, y + 30, x + 50, y + 80, BLACK);  // Right branch
-            drawNode(a->fd, x + 50, y + 80, 25);
+                startpoint=(Vector2){x, y};
+                endpoint=(Vector2){ x + xOffset, y + 80};
+                DrawArrow(startpoint, endpoint, BLACK) ;
+            //DrawLine(x, y+radius, x + xOffset, y + 80, BLACK);  // Right branch
+            drawTree(a->fd, x + xOffset, y + 80, xOffset );
         }
+
+          DessinerNoeud(&a, x,y, WHITE);
     }
 }*/
 
+//-----------------------------------------------------------------------------------------
 
-void drawTree(arbre a, float x, float y, float xOffset) {
-    if (!ArbreVide(a)) {
-        // Draw the node
-        float radius = 40.0f;
+///Fonction qui calcule la largeur d'un sous arbre a partir d'un noeud
+float calculateSubtreeWidth(arbre a) {
 
-        for (int i = 0; i < 36; ++i) {
-            float angle = (float)i * 0.1f;
-            DrawCircleLines(x , y , radius + angle, MAROON);
-        }
+    if (ArbreVide(a)) return 0.0f;
 
-        DrawCircle(x, y, radius, WHITE);
-        DrawText(TextFormat("%d", a->info),x - MeasureText(TextFormat("%d", a->info), 20) / 2 , y - 20 / 2 , 20, MAROON);
-       // DrawText(TextFormat("%d", a->info), x - 15, y - 10, 20, MAROON);
+    // Recursively calculate the graphical width of left and right subtrees
+    float leftWidth = calculateSubtreeWidth(a->fg);
+    float rightWidth = calculateSubtreeWidth(a->fd);
 
-        // Draw lines to its children
-        if (a->fg != NULL) {
-            DrawLine(x, y, x - xOffset, y + 80, BLACK);  // Left branch
-            drawTree(a->fg, x - xOffset, y + 80, xOffset / 1.5);
-        }
-
-        if (a->fd != NULL) {
-
-            DrawLine(x, y, x + xOffset, y + 80, BLACK);  // Right branch
-            drawTree(a->fd, x + xOffset, y + 80, xOffset / 1.5);
-        }
-    }
+    // Include the current node's width
+    return leftWidth + rightWidth + 1.0f;
 }
 
 
 //-----------------------------------------------------------------------------------------
 
-///Booleen pour indiquer le passage par boutton
-bool mouse_over_button (Button button){
-return CheckCollisionPointRec(GetMousePosition(), button.rect);
+///Fonction qui calcule la largeur d'un sous arbre a partir d'un noeud
+
+int calculateSubtreeHeight(arbre a) {
+    if (ArbreVide(a)) return 0;
+
+    int leftHeight = calculateSubtreeHeight(a->fg);
+    int rightHeight = calculateSubtreeHeight(a->fd);
+
+    // Include the current node's height
+    return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
 }
 
-//-----------------------------------
+//-----------------------------------------------------------------------------------------
 
-int main(void) {
-  //initialiser l'arbre:
-    arbre R=NULL;
-    int value;
+///Fontion qui dessine un arbre binaire de sorte que la largeur est traite
 
-    // Window setup
-    int width = 1700;
-    int height = 1000;
-    float tailleNoeud = 20.0;
-    InitWindow(width, height, "Tree Visualizer");
+void drawTree(arbre a, float x, float y, float levelHeight) {
 
-    char name[MAX_INPUT_CHARS + 1] = "\0";      // NOTE: One extra space required for null terminator char '\0'
-    int letterCount = 0;
+    //cette variable "xOffseta" represente le deplacement des branche sur l'axe (ox),
+    //chaque fois un nouveau noeud est ajoute, il faut regler ce deplacement pour eviter la collision entre les noeuds
+    float xOffset=40.0f;
 
-    Rectangle textBox = { 150, 100, 100,50 };
+    if (!ArbreVide(a)) {
+
+        // Calculate le nombre de noeud d'un sous-arbre
+        int leftWidth = calculateSubtreeWidth(a->fg);
+        int rightWidth = calculateSubtreeWidth(a->fd);
+
+        // Calculate the total width of the subtree
+        int totalWidth = leftWidth + rightWidth + 1;
+
+        // Le deplacement est en fonction  de la moyenne entre l'hauteur et le nombre de noeuds
+         xOffset = 20.0f * (calculateSubtreeHeight(a) +( nombre_de_noeuds(a)/2));
+
+
+        // Dessin de la branche gauche
+        if (a->fg != NULL) {
+            Vector2 startpoint = { x, y };
+
+            //le noeud est a droite du noeud de centre (x,y) donc le deplacement est negative sur l'axe de (ox)
+            //le deplacement dans l'axe (oy) est constant et il est en fonction de l'hauteur de larbre courrant
+            //et le point d'arrive est en dessus du noeud c'est pour cette raison en fait " -Radius "
+            Vector2 endpoint = { x - xOffset, y + levelHeight -RADIUS};
+
+            //dessin de la fleche
+            DrawArrow(startpoint, endpoint, MAROON);
+            //appel recursif pour le dessin du sous arbre'
+            drawTree(a->fg, x - xOffset, y + levelHeight, levelHeight);
+        }
+
+        // Dessin de la branche droite
+
+        if (a->fd != NULL) {
+            Vector2 startpoint = { x, y };
+
+            //le noeud est a gauche du noeud de centre (x,y) donc le deplacement est positif sur l'axe de (ox)
+            Vector2 endpoint = { x + xOffset, y + levelHeight-RADIUS };
+            DrawArrow(startpoint, endpoint, MAROON);
+            drawTree(a->fd, x + xOffset, y + levelHeight, levelHeight);
+        }
+
+        // Dessiner le noeud a la fin pour que les fleches restent en dernier
+        DessinerNoeud(&a, x, y, WHITE);
+    }
+}
+
+
+
+//-----------------------------------------------------------------------------------------
+
+
+///Dessin du boutton avec les control necessaire
+void dessinerBoutton(float x, float y, char text[20], Button * button_0){
+
+        * button_0 = (Button){ (Rectangle){x, y, 90, 50}, RED, false };
+        float textX = (*button_0).rect.x + (*button_0).rect.width/2 - MeasureText(text, 15)/2;
+        float textY = (*button_0).rect.y +(* button_0).rect.height/2 - 15/2;
+        bool mouse_over_button = CheckCollisionPointRec(GetMousePosition(), (*button_0).rect);
+
+
+
+        // Check if button is clicked
+        if (mouse_over_button) {
+            (*button_0).color=BLUE;
+            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                (*button_0).color = GREEN ;
+                (*button_0).pressed= true;
+                }
+
+            }
+        else
+        (*button_0).color=RED;
+
+        //Dessin du rectangle
+        DrawRectangleRec((*button_0).rect, (*button_0).color);
+        // Dessin du text
+        DrawText(text, textX, textY,15, WHITE);
+    }
+
+///Main (GUI)
+
+
+//-----------------------------------------------------------------------------------------
+
+
+///Dessin de Barre de text :
+
+void DessinerBarreText(float x, float y,  textField * Barre, int * framesCounter, int * letterCount ){
+
+    //text field setup\
+
+
+
+    char text[MAX_INPUT_CHARS + 1] = "\0";      // NOTE: One extra space required for null terminator char '\0'
+   // int (letterCount) = 0;
+
+
+    (*Barre).textBox = (Rectangle) { x,y, 100,50 };
+    (*Barre).color= LIGHTGRAY;
     bool mouseOnText = false;
 
-    int framesCounter = 0;
+   // int (framesCounter) = 0;
 
 
-
-    SetTargetFPS(60);
-
-    // Button setup
-    //Button button_0 = { (Rectangle){width/2-100, height/2-50, 200, 100}, RED };
-     Button button_0 = { (Rectangle){250, 100, 90, 50}, RED };
-
-    while (!WindowShouldClose()) {
-
-
-        ///passage de la souris par textfield
-        if (CheckCollisionPointRec(GetMousePosition(), textBox)) mouseOnText = true;
+     ///passage de la souris par textfield
+        if (CheckCollisionPointRec(GetMousePosition(), (*Barre).textBox)) mouseOnText = true;
         else mouseOnText = false;
 
         if (mouseOnText)
         {
-            // Set the window's cursor to the I-Beam
-            SetMouseCursor(MOUSE_CURSOR_IBEAM);
-            ///le cursor devient celui avec la forme de "I" lorsque on approche la barre de text
 
-            // Get char pressed (unicode character) on the queue
+            //SetMouseCursor(MOUSE_CURSOR_IBEAM);
+            (*Barre).mouseOn=true;
+            ///le cursor devient celui avec la forme de "I" (I-Beam) lorsque on approche la (*Barre) de text
+
+
             int key = GetCharPressed();
             ///recuperer la cle du clavier en code ASCII
 
@@ -531,11 +738,11 @@ int main(void) {
             while (key > 0)
             {
                 // NOTE: Only allow keys in range [32..125]
-                if ((key >= 32) && (key <= 125) && (letterCount < MAX_INPUT_CHARS))
+                if ((key >= 32) && (key <= 125) && ((*letterCount) < MAX_INPUT_CHARS))
                 {
-                    name[letterCount] = (char)key; ///recuperer le cle en charactere
-                    name[letterCount+1] = '\0'; ///ajouter le charactere de terminaison
-                    letterCount++;
+                    (*Barre).text[(*letterCount)] = (char)key; ///recuperer le cle en charactere
+                    (*Barre).text[(*letterCount)+1] = '\0'; ///ajouter le charactere de terminaison
+                    (*letterCount)++;
                 }
 
                 key = GetCharPressed();  /// Check next character in the queue
@@ -544,92 +751,193 @@ int main(void) {
             ///traitement de supression de charactere (retour)
             if (IsKeyPressed(KEY_BACKSPACE))
             {
-                letterCount--;
-                if (letterCount < 0) letterCount = 0;
-                name[letterCount] = '\0';
+                (*letterCount)--;
+                if ((*letterCount) < 0) (*letterCount) = 0;
+                (*Barre).text[(*letterCount)] = '\0';
             }
         }
-        ///si il y a pas un passage aux barre de text, le cursor reste lui meme ( par defaut)
-        else SetMouseCursor(MOUSE_CURSOR_DEFAULT);
 
-        if (mouseOnText) framesCounter++;
-        else framesCounter = 0;
+        ///si il y a pas un passage aux (*Barre) de text, le cursor reste lui meme ( par defaut)
+        else  //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+        (*Barre).mouseOn=false;
+
+        if (mouseOnText) (*framesCounter)++;
+        else (*framesCounter) = 0;
         //----------------------------------------------------------------------------------
 
-        // Draw
-        //----------------------------------------------------------------------------------
+        ///Dessins
 
-        // Button color change based on mouse position
-
-        // Drawing operations
-        BeginDrawing();
-
-        ClearBackground(RAYWHITE);
-
-
-            DrawText("Arbres Binaire",30, 50, 20, GRAY);
+        DrawText("Arbres Binaire",30, 50, 20, GRAY);
 
             ///Dessiner le textfield
-            DrawRectangleRec(textBox, LIGHTGRAY);
+            DrawRectangleRec((*Barre).textBox, (*Barre).color);
 
             if (mouseOnText)
-                ///si il y a un passage au barre de text, le  trait du rectangle devient rouge
-                DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
+                ///si il y a un passage au (*Barre) de text, le  trait du rectangle devient rouge
+                DrawRectangleLines((*Barre).textBox.x, (*Barre).textBox.y, (*Barre).textBox.width, (*Barre).textBox.height, RED);
             else
                ///sinon le trait du rectangle sont gris
-            DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, DARKGRAY);
+               DrawRectangleLines((*Barre).textBox.x, (*Barre).textBox.y, (*Barre).textBox.width, (*Barre).textBox.height, RED);
+
 
             ///dessiner le Contenant le nom
-            DrawText(name, (int)textBox.x + 5, (int)textBox.y + 18, 20, MAROON);
+            DrawText((*Barre).text, (*Barre).textBox.x + 5, (*Barre).textBox.y + 18, 20, MAROON);
 
 
-            DrawText(TextFormat("INPUT CHARS: %i/%i", letterCount, MAX_INPUT_CHARS), 200, 170, 10, DARKGRAY);
+            DrawText(TextFormat("INPUT CHARS: %i/%i", (*letterCount), MAX_INPUT_CHARS), 200, 170, 10, DARKGRAY);
             /// "input char x/y"
 
-            ///si la cursor sur la barre de text
+            ///si la cursor sur la (*Barre) de text
             if (mouseOnText)
             {
                 ///si le compteur de lettre n'a pas encore depassee le maximum :
-                if (letterCount < MAX_INPUT_CHARS)
+                if ((*letterCount) < MAX_INPUT_CHARS)
                 {
                     ///dessiner une animation du character "_" pour indiquer a l'utilisateur qu'il peut inserer un text
                     // Draw blinking underscore char
-                    if (((framesCounter/20)%2) == 0) DrawText("_", (int)textBox.x + 8 + MeasureText(name, 20), (int)textBox.y + 24, 20, MAROON);
+                    if ((((*framesCounter)/20)%2) == 0) DrawText("_", (*Barre).textBox.x + 8 + MeasureText((*Barre).text, 20), (*Barre).textBox.y + 24, 20, MAROON);
                 }
                 ///sinon, indiquer a l'utilisateur qu'il faut supprimer
                 else DrawText("Press BACKSPACE to delete chars...", 230, 300, 20, GRAY);
             }
-
-        DrawRectangleRec(button_0.rect, button_0.color);
-
-        // Draw button text
-        float textX = button_0.rect.x + button_0.rect.width/2 - MeasureText("Inserer", 15)/2;
-        float textY = button_0.rect.y + button_0.rect.height/2 - 15/2;
-        DrawText("Inserer", textX, textY,15, WHITE);
-
-        if (CheckCollisionPointRec(GetMousePosition(), textBox)) mouseOnText = true;
+        if (CheckCollisionPointRec(GetMousePosition(),(*Barre).textBox)) mouseOnText = true;
         else mouseOnText = false;
 
-        // Check if button is clicked
-        if (mouse_over_button(button_0)) {
-            button_0.color=BLUE;
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                button_0.color = GREEN ;
-                int value = atoi(name);
+}
+
+//-----------------------------------------------------------------------------------------
+
+
+
+///Main
+
+int main(void) {
+
+
+   ///Declarations necessaires
+    int width = 1700;
+    int height = 1000;
+    int letterCount = 0;
+    int framesCounter = 0;
+    int letterCount1 = 0;
+    int framesCounter1= 0;
+
+    int letterCount2 = 0;
+    int framesCounter2 = 0;
+
+    int letterCount3 = 0;
+    int framesCounter3= 0;
+
+    ///Barres de text
+    textField BarreInsere;
+    textField BarreRechercher;
+    textField BarreSupprimer;
+    textField BarreCreer;
+
+
+    ///Bouttons:
+    Button button_inserer;
+    Button button_rechercher;
+    Button button_creer;
+    Button button_supprimer;
+
+    float levelHeight;
+    int value;
+    int max;
+    arbre R;
+
+    ///Initialisations necessaires
+
+    //Fentetre
+    width = 1700;
+    height = 1000;
+    framesCounter = 0;
+    letterCount = 0;
+
+    //Initilalisation de l'arbre:
+    R=NULL;
+    //Initialisation du text dans la barre de text concernant l'insertion:
+    strcpy(BarreInsere.text, "");
+     strcpy(BarreCreer.text, "");
+      strcpy(BarreSupprimer.text, "");
+       strcpy(BarreRechercher.text, "");
+    //Initalisation de la fenetre:
+    InitWindow(width, height, "Tree Visualizer");
+
+    //Initialisation de l'echelle de l'hauteur d'arbre
+    levelHeight= 100.0f;
+
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose()) {
+
+      ClearBackground(RAYWHITE);
+      BeginDrawing();
+
+        // Drawing operations
+
+        ///traitement de  cursor :
+
+
+
+        DessinerBarreText(150, 100, &BarreInsere, &framesCounter, &letterCount);
+
+        dessinerBoutton(250,100,"Inserer",&button_inserer);
+
+
+        DessinerBarreText(150, 200, &BarreCreer, &framesCounter1, &letterCount1);
+
+        dessinerBoutton(250,200,"Creer",&button_creer);
+
+
+        DessinerBarreText(150, 300, &BarreRechercher, &framesCounter2, &letterCount2);
+
+        dessinerBoutton(250,300,"Recherche",&button_rechercher);
+
+
+        DessinerBarreText(150,400, &BarreSupprimer ,&framesCounter3, &letterCount3);
+
+        dessinerBoutton(250,400,"Supprimer",&button_supprimer);
+
+
+       if (BarreCreer.mouseOn || BarreInsere.mouseOn || BarreRechercher.mouseOn || BarreSupprimer.mouseOn)
+       SetMouseCursor(MOUSE_CURSOR_IBEAM);
+       else SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+
+
+
+
+        // Draw button text
+        if(button_inserer.pressed){
+
+                int value = atoi(BarreInsere.text);
 
 
                 // Call the inserer function with the obtained value
                 insertion(&R, value);
                 printf("\nValeur inseree !\nUpdate:\n");
                 infixe(R);
+                levelHeight = calculateSubtreeHeight(R) * 20.0f; // Adjust the factor as needed
             }
-        }else {
-            button_0.color=RED;
-        }
+
+
+
+       // Draw button text
+        if(button_creer.pressed){
+
+                int max = atoi(BarreInsere.text);
+
+
+                // Call the inserer function with the obtained value
+                R= Creer_Arbre(max);
+                printf("\nValeur inseree !\nUpdate:\n");
+                infixe(R);
+                levelHeight = calculateSubtreeHeight(R) * 20.0f; // Adjust the factor as needed
+            }
 
        // DrawFPS(10, 10);
-        drawTree(R, GetScreenWidth() / 2, 50, 150);
-        EndDrawing();
+       drawTree(R, GetScreenWidth() / 2, 50, levelHeight);
+       EndDrawing();
     }
 
     // De-Initialization
@@ -640,5 +948,6 @@ int main(void) {
 
 
 //------------------------------------------------------------------------------------
-// Program main entry point
+// Fin du programme
 //------------------------------------------------------------------------------------
+

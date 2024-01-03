@@ -73,7 +73,7 @@ typedef noeud* arbre;
 /**-------------------PROTOTYPES-------------------**/
 
 ///Dessiner le noeud d'un arbre
-void DessinerNoeud(arbre* R, float x, float y, Color couleur);
+void DessinerNoeud(arbre* R, float x, float y, Color couleur, Font font);
 
 //---------------------------------------------
 
@@ -168,12 +168,12 @@ void supprimer(arbre* a, int val, arbre pere);
 //---------------------------------------------
 
 ///Dessin de l'arbre Binaire
-void drawTree(arbre a, float x, float y, float levelHeight);
+void drawTree(arbre a, float x, float y, float levelHeight,Font font);
 
 //---------------------------------------------
 
 ///Dessin d'un  boutton
-void dessinerBoutton(float x, float y, float width, float height, char text[20], Button* button_0);
+void dessinerBoutton(float x, float y, float width, float height, char text[20], Font font, Button* button_0);
 
 //---------------------------------------------
 
@@ -577,9 +577,10 @@ void DrawArrow(Vector2 startPoint, Vector2 endPoint, Color col){
 
 
 ///Dessiner le noeud d'un arbre
-void DessinerNoeud(arbre * R, float x, float y, Color couleur ){
+void DessinerNoeud(arbre * R, float x, float y, Color couleur, Font font ){
 
 Vector2 point={x,y};
+
     //Affecter les valeurs / coordonnees necessaires
     (*R)->noeudshape.col=couleur;
     (*R)->noeudshape.rayon=RADIUS; ///this is a constant
@@ -599,7 +600,7 @@ Vector2 point={x,y};
             float angle = (float)i * 0.1f;
             DrawCircleLines(x , y , RADIUS + angle, MAROON);
         }
-      DrawText(TextFormat("%d", (*R)->info),x - MeasureText(TextFormat("%d", (*R)->info), 20) / 2 , y - 20 / 2 , 20, MAROON);
+      DrawTextEx(font,TextFormat("%d", (*R)->info), (Vector2){x - MeasureText(TextFormat("%d", (*R)->info), 20) / 2 , y - 20 / 2} , 20,2, MAROON);
 
 }
 
@@ -774,7 +775,7 @@ void drawTree(arbre a, float x, float y, float levelHeight) {
 ///Fontion qui dessine un arbre binaire de sorte que la largeur est traite (ENHANCED)
 
 
-void drawTree(arbre a, float x, float y, float levelHeight) {
+void drawTree(arbre a, float x, float y, float levelHeight, Font font) {
     if (ArbreVide(a)) return;
 
    // Calculate la largeur d'un sous-arbre
@@ -799,7 +800,7 @@ void drawTree(arbre a, float x, float y, float levelHeight) {
         //dessin de la fleche
         DrawArrow(startpoint, endpoint, MAROON);
         //appel recursif pour le dessin du sous arbre'
-        drawTree(a->fg, x - xOffset, y + levelHeight, levelHeight);
+        drawTree(a->fg, x - xOffset, y + levelHeight, levelHeight, font);
     }
 
     // Dessin de la branche droite
@@ -809,11 +810,11 @@ void drawTree(arbre a, float x, float y, float levelHeight) {
         //le noeud est a gauche du noeud de centre (x,y) donc le deplacement est positif sur l'axe de (ox)
         Vector2 endpoint = { x + xOffset, y + levelHeight };
         DrawArrow(startpoint, endpoint, MAROON);
-        drawTree(a->fd, x + xOffset, y + levelHeight, levelHeight);
+        drawTree(a->fd, x + xOffset, y + levelHeight, levelHeight, font);
     }
 
    // Dessiner le noeud a la fin pour que les fleches restent en dernier
-    DessinerNoeud(&a, x, y, WHITE);
+    DessinerNoeud(&a, x, y, WHITE, font);
 }
 
 
@@ -821,11 +822,11 @@ void drawTree(arbre a, float x, float y, float levelHeight) {
 
 
 ///Dessin du boutton avec les control necessaire
-void dessinerBoutton(float x, float y, float width, float height, char text[20], Button * button_0){
+void dessinerBoutton(float x, float y, float width, float height, char text[20], Font font, Button * button_0){
 
         * button_0 = (Button){ (Rectangle){x, y, width, height}, RED, false };
-        float textX = (*button_0).rect.x + (*button_0).rect.width/2 - MeasureText(text, 15)/2;
-        float textY = (*button_0).rect.y +(* button_0).rect.height/2 - 15/2;
+        float textX = (*button_0).rect.x + (*button_0).rect.width/2 - MeasureText(text, font.baseSize)/2;
+        float textY = (*button_0).rect.y +(* button_0).rect.height/2 - font.baseSize/2;
         bool mouse_over_button = CheckCollisionPointRec(GetMousePosition(), (*button_0).rect);
 
 
@@ -845,7 +846,7 @@ void dessinerBoutton(float x, float y, float width, float height, char text[20],
         //Dessin du rectangle
         DrawRectangleRec((*button_0).rect, (*button_0).color);
         // Dessin du text
-        DrawText(text, textX, textY,15, WHITE);
+        DrawTextEx(font, text, (Vector2){textX, textY},font.baseSize, 2, WHITE);
     }
 
 
@@ -1017,6 +1018,7 @@ height = 50;*/
 int main(void) {
 
 
+
    ///Declarations necessaires
     int width=800 ;
     int height=450;
@@ -1048,7 +1050,7 @@ int main(void) {
     int value;
     int max;
     arbre R;
-    Font customFont = LoadFont(".\Poppins-Regular.otf");
+
 
     ///Initialisations necessaires
 
@@ -1074,31 +1076,37 @@ int main(void) {
 
     SetTargetFPS(60);
 
+    Font customFont = LoadFontEx("Poppins-Black.ttf", 50, 0,0);
+    Font font =  LoadFontEx("Poppins-Medium.ttf", 20, 0, 0);
+     Font fontbot =  LoadFontEx("Poppins-Medium.ttf", 18, 0, 0);
     while (!WindowShouldClose()) {
-     //   customFont = LoadFont(".\Poppins-Regular.otf");
+
 
       ClearBackground(RAYWHITE);
       BeginDrawing();
 
+        DrawTextEx(customFont,"Arbres Binaires", (Vector2){10, 10}, 50,2, BLACK);
+
+
 
         DessinerBarreText(150, 100, 100,50, &BarreInsere, &framesCounter, &letterCount);
 
-        dessinerBoutton(250,100,90,50,"Inserer",&button_inserer);
+        dessinerBoutton(250,100,90,50,"Inserer",fontbot,&button_inserer);
 
 
         DessinerBarreText(150, 200, 100,50 ,&BarreCreer, &framesCounter1, &letterCount1);
 
-        dessinerBoutton(250,200,90,50,"Creer",&button_creer);
+        dessinerBoutton(250,200,90,50,"Creer",fontbot, &button_creer);
 
 
         DessinerBarreText(150, 300,100,50, &BarreRechercher, &framesCounter2, &letterCount2);
 
-        dessinerBoutton(250,300,90,50,"Recherche",&button_rechercher);
+        dessinerBoutton(250,300,90,50," Recherche",fontbot, &button_rechercher);
 
 
         DessinerBarreText(150,400, 100, 50, &BarreSupprimer ,&framesCounter3, &letterCount3);
 
-        dessinerBoutton(250,400,90,50, "Supprimer",&button_supprimer);
+        dessinerBoutton(250,400,90,50, "Supprimer",fontbot, &button_supprimer);
 
 
        if (BarreCreer.mouseOn || BarreInsere.mouseOn || BarreRechercher.mouseOn || BarreSupprimer.mouseOn)
@@ -1137,7 +1145,7 @@ int main(void) {
             }
 
        // DrawFPS(10, 10);
-       drawTree(R, GetScreenWidth() / 2, 50, levelHeight);
+       drawTree(R, GetScreenWidth() / 2, 50, levelHeight, font);
 
        EndDrawing();
     }

@@ -338,6 +338,7 @@ int recherche(arbre a, int val){
 ///Creation d'un noeud
 
 arbre creer_noeud(int val){
+  Color gray = {52, 52, 51, 255};
   arbre p; //ptr vers le noeud
   //p=malloc(sizeof(noeud)); //Reservation d'un espace pour le noeud
   p= (arbre)malloc(sizeof(noeud));
@@ -345,8 +346,8 @@ arbre creer_noeud(int val){
   p->fd=NULL;
   p->pere=NULL;
   p->info=val;
-  p->noeudshape.col=WHITE;
-  p->noeudshape.infoCol=MAROON;
+  p->noeudshape.col=gray;
+  p->noeudshape.infoCol=RAYWHITE;
   p->noeudshape.rayon=RADIUS;
   return p;
 }
@@ -403,8 +404,6 @@ void insertion(arbre * a, int val){
                  fils_Gauche(r)->pere=r;
                   insert=1;
 
-                   r->fg->noeudshape.col=WHITE;
-                   r->fg->noeudshape.rayon=RADIUS;
                 }
               else{
                  //father=r;
@@ -420,8 +419,7 @@ void insertion(arbre * a, int val){
                      fils_Droit(r)->pere=r;
                      insert=1;
 
-                     r->fd->noeudshape.col=WHITE;
-                     r->fd->noeudshape.rayon=RADIUS;
+
                     }
                     else{
                       r=fils_Droit(r);
@@ -624,6 +622,10 @@ void DrawArrow(Vector2 startPoint, Vector2 endPoint, Color col){
 ///Dessiner le noeud d'un arbre
 void DessinerNoeud(arbre  r , Font font ){
 
+Color Lavender = {155, 117, 218, 255};
+Color gray= {52, 52, 51, 255};
+
+
 float x=r->noeudshape.centre.x;
 float y=r->noeudshape.centre.y;
 Vector2 point={x,y};
@@ -642,7 +644,7 @@ Vector2 point={x,y};
 
     for (int i = 0; i < 15; ++i) {
             float angle = (float)i * 0.1f;
-            DrawCircleLines(x , y , RADIUS + angle, MAROON);
+            DrawCircleLines(x , y , RADIUS + angle, gray);
         }
       DrawTextEx(font,TextFormat("%d", (r)->info), (Vector2){x - MeasureText(TextFormat("%d", (r)->info), 20) / 2 , y - 20 / 2} , 20,2,r->noeudshape.infoCol);
 
@@ -655,17 +657,18 @@ Vector2 point={x,y};
 
 void DessinerBranche(arbre r) {
     Vector2 startpoint, endpoint;
+    Color lavender = {155, 117, 218, 255};
 
     if (r->fd != NULL) {
         startpoint = r->BrancheDroite.start;
         endpoint = r->BrancheDroite.end;
-        DrawArrow(startpoint, endpoint, MAROON);
+        DrawArrow(startpoint, endpoint, lavender);
     }
 
     if (r->fg != NULL) {
         startpoint = r->BrancheGauche.start;
         endpoint = r->BrancheGauche.end;
-        DrawArrow(startpoint, endpoint, MAROON);
+        DrawArrow(startpoint, endpoint, lavender);
     }
 }
 
@@ -786,12 +789,13 @@ void dessinerBoutton(float x, float y, float width, float height, char text[20],
 ///Dessin de Barre de text :
 
 void DessinerBarreText(float x, float y, float width, float height,  textField * Barre, int * framesCounter, int * letterCount ){
+Color lavender = {155, 117, 218, 255};
 
-
+Color orange= {244, 120, 66, 255};
     char text[MAX_INPUT_CHARS + 1] = "\0";      // NOTE: One extra space required for null terminator char '\0'
 
     (*Barre).textBox = (Rectangle) { x,y, width,height };
-    (*Barre).color= LIGHTGRAY;
+    (*Barre).color= DARKGRAY;
     bool mouseOnText = false;
 
 
@@ -851,17 +855,17 @@ void DessinerBarreText(float x, float y, float width, float height,  textField *
 
             if (mouseOnText)
                 ///si il y a un passage au (*Barre) de text, le  trait du rectangle devient rouge
-                DrawRectangleLines((*Barre).textBox.x, (*Barre).textBox.y, (*Barre).textBox.width, (*Barre).textBox.height, RED);
+                DrawRectangleLines((*Barre).textBox.x, (*Barre).textBox.y, (*Barre).textBox.width, (*Barre).textBox.height,orange);
             else
                ///sinon le trait du rectangle sont gris
-               DrawRectangleLines((*Barre).textBox.x, (*Barre).textBox.y, (*Barre).textBox.width, (*Barre).textBox.height, GRAY);
+               DrawRectangleLines((*Barre).textBox.x, (*Barre).textBox.y, (*Barre).textBox.width, (*Barre).textBox.height, DARKGRAY);
 
 
             ///dessiner le Contenant le nom
-            DrawText((*Barre).text, (*Barre).textBox.x + 5, (*Barre).textBox.y + 18, 20, MAROON);
+            DrawText((*Barre).text, (*Barre).textBox.x + 5, (*Barre).textBox.y + 18, 20, orange);
 
 
-            DrawText(TextFormat("%i/%i", (*letterCount), MAX_INPUT_CHARS), (*Barre).textBox.x + (*Barre).textBox.width-MeasureText(TextFormat("%i/%i", (*letterCount), MAX_INPUT_CHARS), 4)-5, (*Barre).textBox.y + (*Barre).textBox.height+4, 4, DARKGRAY);
+            DrawText(TextFormat("%i/%i", (*letterCount), MAX_INPUT_CHARS), (*Barre).textBox.x + (*Barre).textBox.width-MeasureText(TextFormat("%i/%i", (*letterCount), MAX_INPUT_CHARS), 4)-5, (*Barre).textBox.y + (*Barre).textBox.height+4, 4, orange);
             /// "input char x/y"
 
             ///si la cursor sur la (*Barre) de text
@@ -872,7 +876,7 @@ void DessinerBarreText(float x, float y, float width, float height,  textField *
                 {
                     ///dessiner une animation du character "_" pour indiquer a l'utilisateur qu'il peut inserer un text
                     // Draw blinking underscore char
-                    if ((((*framesCounter)/20)%2) == 0) DrawText("_", (*Barre).textBox.x + 8 + MeasureText((*Barre).text, 20), (*Barre).textBox.y + 24, 20, MAROON);
+                    if ((((*framesCounter)/20)%2) == 0) DrawText("_", (*Barre).textBox.x + 8 + MeasureText((*Barre).text, 20), (*Barre).textBox.y + 24, 20,orange);
                 }
             }
         if (CheckCollisionPointRec(GetMousePosition(),(*Barre).textBox)) mouseOnText = true;
@@ -979,6 +983,7 @@ int main(void) {
     Color Charcoal = {32, 32, 31, 255};
     Color Lavender = {155, 117, 218, 255};
     Color orange= {244, 120, 66, 255};
+    Color gray = {52, 52, 51, 255};
 
 
     ///Initialisations necessaires
@@ -1042,7 +1047,7 @@ int main(void) {
     while (!WindowShouldClose()) {
 
 
-      ClearBackground(WHITE);
+      ClearBackground((Color){14, 14, 14, 255});
       BeginDrawing();
 
      //  DrawTexture(backgroundTexture, 0, 0, WHITE);
@@ -1051,38 +1056,38 @@ int main(void) {
 
         Rectangle buttonsRec = {100, 150, 300,600 };
 
-        DrawRectangleLinesEx(buttonsRec, 4, MAROON);
+        DrawRectangleLinesEx(buttonsRec, 4, orange);
 
         Rectangle recarbre = {450, 150, GetScreenWidth()-450-50,GetScreenHeight()-150-30 };
 
-        DrawRectangleLinesEx(recarbre, 4, MAROON);
+        DrawRectangleLinesEx(recarbre, 4, Lavender);
 
         Rectangle bonusRec = {100, 780, 300, GetScreenHeight()-780-30 };
 
-        DrawRectangleLinesEx(bonusRec, 4, MAROON);
+        DrawRectangleLinesEx(bonusRec, 4, orange);
 
-        DrawTextEx(aestheticTitle,"OUTPUT", (Vector2){1000,30}, 80,2, MAROON);
-        DrawTextEx(aestheticTitle,"INPUT", (Vector2){150, 30}, 80,2, MAROON);
+        DrawTextEx(aestheticTitle,"OUTPUT", (Vector2){1000,30}, 80,2, Lavender);
+        DrawTextEx(aestheticTitle,"INPUT", (Vector2){150, 30}, 80,2, orange);
 
 
         DessinerBarreText(150, 275, 100,50, &BarreInsere, &framesCounter, &letterCount);
 
-        dessinerBoutton(250,275,90,50,"Inserer",fontbot,&button_inserer, Lavender);
+        dessinerBoutton(250,275,90,50,"Inserer",fontbot,&button_inserer, orange);
 
 
         DessinerBarreText(150, 375, 100,50 ,&BarreCreer, &framesCounter1, &letterCount1);
 
-        dessinerBoutton(250,375,90,50,"Creer",fontbot, &button_creer, Lavender);
+        dessinerBoutton(250,375,90,50,"Creer",fontbot, &button_creer, orange);
 
 
         DessinerBarreText(150, 475,100,50, &BarreRechercher, &framesCounter2, &letterCount2);
 
-        dessinerBoutton(250,475,90,50," Recherche",fontbot, &button_rechercher, Lavender);
+        dessinerBoutton(250,475,90,50," Recherche",fontbot, &button_rechercher, orange);
 
 
         DessinerBarreText(150,575, 100, 50, &BarreSupprimer ,&framesCounter3, &letterCount3);
 
-        dessinerBoutton(250,575,90,50, "Supprimer",fontbot, &button_supprimer, Lavender);
+        dessinerBoutton(250,575,90,50, "Supprimer",fontbot, &button_supprimer, orange);
 
 
         arbreMisAjour=false;
@@ -1139,7 +1144,7 @@ int main(void) {
                 infixe(R);
 
 
-                levelHeight = calculateSubtreeHeight(R) * 20.0f;
+                levelHeight = calculateSubtreeHeight(R) * 15.0f;
                 updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
             }
         }
@@ -1159,7 +1164,7 @@ int main(void) {
             R= Creer_Arbre(max);
             // printf("\nValeur inseree !\nUpdate:\n");
             infixe(R);
-            levelHeight = calculateSubtreeHeight(R) * 20.0f;
+            levelHeight = calculateSubtreeHeight(R) * 15.0f;
 
             ///Mettre a jour les coordonnees de l'arbre :
             updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
@@ -1175,7 +1180,7 @@ int main(void) {
           //si trouv existe, on va le stocker dans trouvTemp pour le colorer comme un noeud independant
 
           if (trouv != NULL) {
-              trouv->noeudshape.col=MAROON;
+              trouv->noeudshape.col=orange;
               trouv->noeudshape.infoCol=WHITE;
             }
         }
@@ -1191,7 +1196,7 @@ int main(void) {
             R=supprimer(R, value);
             // printf("\nValeur inseree !\nUpdate:\n");
             infixe(R);
-            levelHeight = calculateSubtreeHeight(R) * 20.0f;
+            levelHeight = calculateSubtreeHeight(R) * 15.0f;
 
             ///Mettre a jour les coordonnees de l'arbre :
             updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
@@ -1204,8 +1209,8 @@ int main(void) {
            //alors il faut que les couleurs redevient comme
 
            if(  (( arbreMisAjour) || (strcmp(BarreRechercher.text, "")==0)) && (trouv!=NULL) ){
-              trouv->noeudshape.col=WHITE;
-              trouv->noeudshape.infoCol=MAROON;
+              trouv->noeudshape.col=gray;
+              trouv->noeudshape.infoCol=RAYWHITE;
               trouv=NULL;
             }
        ///

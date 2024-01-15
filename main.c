@@ -1135,9 +1135,9 @@ int main(void) {
 
             // Call the inserer function with the obtained value
             if (recherche(R, value)) {
-                DrawText(" Valeur  deja existante", bonusRec.x+ ((bonusRec.width)/2 )- (MeasureText("Cette Valeur est deja existante",10)/2), bonusRec.y+(bonusRec.height/2)+  (10/2), 10, MAROON);
-                sleep(100);
-                }
+               DrawText(
+             "Cette valeur existe deja", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
+            }
                 else{
                 insertion(&R, value);
                 printf("\nValeur inseree !\nUpdate:\n");
@@ -1162,6 +1162,10 @@ int main(void) {
 
             // Call the inserer function with the obtained value
             R= Creer_Arbre(max);
+             if (max<0) {
+               DrawText(
+             "input non valide", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
+            }
             // printf("\nValeur inseree !\nUpdate:\n");
             infixe(R);
             levelHeight = calculateSubtreeHeight(R) * 15.0f;
@@ -1183,6 +1187,9 @@ int main(void) {
               trouv->noeudshape.col=orange;
               trouv->noeudshape.infoCol=WHITE;
             }
+            else DrawText(
+             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
+
         }
 
 
@@ -1193,6 +1200,10 @@ int main(void) {
 
 
             // Call the inserer function with the obtained value
+            if (!recherche(R, value)){  DrawText(
+             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);}
+             else{
+
             R=supprimer(R, value);
             // printf("\nValeur inseree !\nUpdate:\n");
             infixe(R);
@@ -1200,6 +1211,7 @@ int main(void) {
 
             ///Mettre a jour les coordonnees de l'arbre :
             updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
+             }
 
         }
 

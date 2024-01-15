@@ -41,6 +41,7 @@ typedef struct Node{
 Vector2 centre ;
 float rayon;
 Color col;
+Color infoCol;
 }Node;
 
 typedef struct Branch{
@@ -169,7 +170,7 @@ int maximum(arbre a);
 //---------------------------------------------
 
 ///Suppression d'une valeur dans un arbre
-void supprimer(arbre* a, int val, arbre pere);
+arbre supprimer(arbre a, int val);
 
 //---------------------------------------------
 
@@ -301,19 +302,18 @@ return ( 1 + nombre_de_noeuds ( a->fg )
 
 ///Recherche dans un arbre binaire ordonne, Elle retourne une adresse ( le pointeur qui contient var)
 
-arbre recherche_pointeur(arbre a, int val){
-  if (ArbreVide(a)==1) return NULL;
-
-  if (a->info==val){
-     return a;
-  }
-
-  else {
-     if (a->info>val) return  recherche(fils_Gauche(a),val);
-       else return  recherche(fils_Droit(a),val);
+arbre recherche_pointeur(arbre r, int val) {
+    if (r == NULL || r->info == val) {
+        return r;
     }
-}
 
+
+    if (val > r->info) {
+        return recherche_pointeur(r->fd, val);
+    }
+    else
+    return recherche_pointeur(r->fg, val);
+}
 //-----------------------------------------------------------------------------------------
 
 ///Recherche dans un arbre binaire ordonne, Elle retourne un booleen
@@ -326,8 +326,8 @@ int recherche(arbre a, int val){
   }
 
   else {
-     if (a->info>val) return  recherche(fils_Gauche(a),val);
-       else return  recherche(fils_Droit(a),val);
+     if (a->info>val) return  recherche(a->fg, val);
+       else return  recherche(a->fd, val);
     }
 }
 
@@ -346,7 +346,8 @@ arbre creer_noeud(int val){
   p->pere=NULL;
   p->info=val;
   p->noeudshape.col=WHITE;
- p->noeudshape.rayon=RADIUS;
+   p->noeudshape.rayon=RADIUS;
+   p->noeudshape.infoCol=MAROON;
   return p;
 }
 
@@ -452,7 +453,7 @@ void updateNodes(arbre *a, float x, float y, float levelHeight) {
       //chaque fois un nouveau noeud est ajoute, il faut regler ce deplacement pour eviter la collision entre les noeuds
 
       // Le deplacement est en fonction  de la largeur/2
-     float xOffset = totalWidth / 2.0f;
+     float xOffset = totalWidth / 1.5f;
 
 
      // Mis a jour des branches gauche
@@ -497,74 +498,78 @@ int maximum(arbre a){
 
 //-----------------------------------------------------------------------------------------
 
+
 ///Supression d'un noeud
 
-void supprimer (arbre * a, int val, arbre pere){
-      int max;
+arbre supprimer(arbre a, int val)
+{
 
-     if (ArbreVide(*a)==0){
+    if (a == NULL)
+        return a;
 
-         //si la valeur a supprimer n'est pas dans la racine a:
-         if (((*a)->info)!=val){
+    // appel recursif des fils de
+    // pour pointer au noeud a
+    //supprimer
 
-             //cas de suppression a gauche
-             if ((*a)->info>val){
-                supprimer ((*a)->fg,val,*a);
-                //supprimer(&(fils_Gauche(*a)),val,*a);
-             }
+    if (a->info > val) {
+        a->fg = supprimer(a->fg, val);
+        return a;
+    }
+    else if (a->info < val) {
+        a->fd = supprimer(a->fd, val);
+        return a;
+    }
 
-             //cas de suppression a droite
-             else{
-                supprimer((*a)->fd,val,*a);
-                //supprimer(&(fils_Droit(*a)),val,*a);
-               }
+    /**on arrive ici ou c'est la
+    racine qu'on va supprimer**/
 
-            }
+    // L'un des fils =NULL
+    if (a->fg == NULL) {
+        arbre temp = a->fd;
+        free(a);
+        return temp;
+    }
+    else if (a->fd == NULL) {
+        arbre temp = a->fg;
+        free(a);
+        return temp;
+    }
 
-
-            //si la valeur a supprimer est dans la racine a:
-            else{
-             ///cas 1 : noeud est une feuille ( fils_droit et fils_gauche = nill)
-              if (ArbreVide(fils_Gauche(*a))&&(ArbreVide(fils_Droit(*a)))){
-                 if (pere->fg==*a){pere->fg=NULL; free(*a);}
-                 else {pere->fd=NULL; free(*a);}
-              }
-
-             ///cas2 : noeud poss de un seul fils : fils droit, ie: le fils droit est vide
-              if (ArbreVide(fils_Gauche(*a))){
-                  if(pere->fg==*a)
-                    {pere->fg=fils_Droit(*a); free(*a);}
-                  else
-                    {pere->fd=fils_Droit(*a);free(a);}
-              }
-
-
-             ///cas3 : noeud poss de un seul fils : fils gauche,  ie: le fils gauc est vide
-             if (ArbreVide(fils_Droit(*a))){
-                 if (pere->fg==*a){pere->fg=fils_Gauche(*a); free(*a);}
-                 else {pere->fd=fils_Gauche(*a); free(*a);}
-                }
-
-             ///cas4 : Le neoud possede les deux fils :
-
-
-             else { max=maximum(fils_Gauche(*a));
-             (*a)->info=max;
-             supprimer(fils_Gauche(*a), max, *a);
-             //supprimer un noeud qui est soit une feuille soit un noeud avec un seul fils
-             }
-
-            }//end of else
-
-
+    // si les deux fils existent
+    else {
+        // Find successor
+        arbre succ = a->fd;
+        while (succ->fg != NULL) {
+            succ = succ->fg;
         }
 
+        arbre succParent = succ->pere;
 
+        // Delete successor.  Since successor
+        // is always left child of its parent
+        // we can safely make successor's right
+        // right child as left of its parent.
+        // If there is no succ, then assign
+        // succ->right to succParent->right
 
+        if (succParent != a)
+            succParent->fg = succ->fd;
+        else
+            succParent->fd = succ->fd;
+
+        // Copy Successor Data to root
+        a->info = succ->info;
+
+        // Delete Successor and return root
+        free(succ);
+        return a;
     }
+}
+
 
 
 //-----------------------------------------------------------------------------------------
+
 
 
 ///Calculer la largeur de l'arbre avec une echelle pour les graphics (*30f) (enhanced for making the tree more spacy and more orgamized )
@@ -665,7 +670,7 @@ Vector2 point={x,y};
             float angle = (float)i * 0.1f;
             DrawCircleLines(x , y , RADIUS + angle, MAROON);
         }
-      DrawTextEx(font,TextFormat("%d", (r)->info), (Vector2){x - MeasureText(TextFormat("%d", (r)->info), 20) / 2 , y - 20 / 2} , 20,2, MAROON);
+      DrawTextEx(font,TextFormat("%d", (r)->info), (Vector2){x - MeasureText(TextFormat("%d", (r)->info), 20) / 2 , y - 20 / 2} , 20,2, r->noeudshape.infoCol);
 
 }
 
@@ -831,7 +836,6 @@ void drawTree(arbre a, float x, float y, float levelHeight, Font font) {
 */
 
 //-----------------------------------------------------------------------------------------
-
 
 ///Dessiner l'abre (Version avec updates)
 
@@ -1184,17 +1188,60 @@ int main(void) {
             levelHeight = calculateSubtreeHeight(R) * 20.0f;
         }
 
+
+
+     arbre trouvTemp, trouv;
+     //button recherche
+
+     if ((button_rechercher.pressed || IsKeyPressed(KEY_ENTER)) && letterCount2 > 0) {
+          int val = atoi(BarreRechercher.text);
+
+         // Appel de la fonction recherche
+          trouv = recherche_pointeur(R, val);
+         //si trouv existe, on va le stocker dans trouvTemp pour le colorer comme un noeud independant
+         if (trouv != NULL) {
+          trouvTemp = creer_noeud(val);
+          trouvTemp->noeudshape.centre=(Vector2){trouv->noeudshape.centre.x, trouv->noeudshape.centre.y};
+          trouvTemp->noeudshape.col=MAROON;
+          trouvTemp->noeudshape.infoCol=WHITE;
+      }
+     }
+
+            if (  (button_supprimer.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreSupprimer.mouseOn) ) ) && letterCount3 > 0){
+
+            int value = atoi(BarreSupprimer.text);
+
+
+            // Call the inserer function with the obtained value
+            R=supprimer(R, value);
+            // printf("\nValeur inseree !\nUpdate:\n");
+            infixe(R);
+            levelHeight = calculateSubtreeHeight(R) * 20.0f;
+
+            ///Mettre a jour les coordonnees de l'arbre :
+
+
+        }
+
+
+       if (strcmp(BarreRechercher.text, "")==0){
+          trouv=NULL;
+          trouvTemp=NULL;
+        }
+
+
       ///Mettre a jour les coordonnees de l'arbre :
         updateNodes(&R, GetScreenWidth() / 2, 50, levelHeight);
         drawTreeUpdates(R, font);
 
+        if ((trouv!=NULL) ) DessinerNoeud(trouvTemp, font);
         EndDrawing();
     }
 
-    // UnloadFont(customFont);
+    UnloadFont(customFont);
 
-    // De-Initialization
-    CloseWindow();  // Close window and OpenGL context
+
+    CloseWindow();
 
     return 0;
 }

@@ -642,10 +642,10 @@ Vector2 point={x,y};
     /*DrawText(text,Center_x - MeasureText(text, taillePolice) / 2 , y - taillePolice / 2 , taillePolice, MAROON);*/
     /*TextFormat est pour obtenir cette variable "a->info" en format textuel*/
 
-    for (int i = 0; i < 15; ++i) {
+   /* for (int i = 0; i < 15; ++i) {
             float angle = (float)i * 0.1f;
             DrawCircleLines(x , y , RADIUS + angle, gray);
-        }
+        }*/
       DrawTextEx(font,TextFormat("%d", (r)->info), (Vector2){x - MeasureText(TextFormat("%d", (r)->info), 20) / 2 , y - 20 / 2} , 20,2,r->noeudshape.infoCol);
 
 }
@@ -978,6 +978,8 @@ int main(void) {
     arbre R; //l'arbre qu'on est entrain de manipuler en cours de ce programme
     arbre trouv; //un pointeur qu'on va utiliser l'ors de la recherche d'une valeur dans un arbre
     bool arbreMisAjour; //on aura besoin de cette variable lors de la recherche d'une valeur dans un arbre
+    bool erreur=false;
+    char erreur_message[100];
 
     ///Couleurs
     Color Charcoal = {32, 32, 31, 255};
@@ -996,6 +998,7 @@ int main(void) {
     height = 1000; //GetScreenHeight();
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(width, height, "Tree Visualizer");
+
 
 
     //Initilalisation de l'arbre:
@@ -1027,6 +1030,7 @@ int main(void) {
 
     Image BackgroundImage = LoadImage("projectBack.png");
     Texture2D backgroundTexture = LoadTextureFromImage(BackgroundImage);
+    strcpy(erreur_message,"");
 
 
    while (!WindowShouldClose()) {
@@ -1048,46 +1052,45 @@ int main(void) {
 
 
       ClearBackground((Color){14, 14, 14, 255});
-      BeginDrawing();
 
-     //  DrawTexture(backgroundTexture, 0, 0, WHITE);
 
+        BeginDrawing();
+
+        DrawTexture(backgroundTexture, 0, 0, WHITE);
 
 
         Rectangle buttonsRec = {100, 150, 300,600 };
 
-        DrawRectangleLinesEx(buttonsRec, 4, orange);
+        ///DrawRectangleLinesEx(buttonsRec, 4, orange);
 
-        Rectangle recarbre = {450, 150, GetScreenWidth()-450-50,GetScreenHeight()-150-30 };
+        Rectangle recarbre = {350, 120, GetScreenWidth()-350-30,GetScreenHeight()-120-30 };
 
         DrawRectangleLinesEx(recarbre, 4, Lavender);
 
-        Rectangle bonusRec = {100, 780, 300, GetScreenHeight()-780-30 };
+        Rectangle bonusRec = {80, 700, 240, 100 };
 
-        DrawRectangleLinesEx(bonusRec, 4, orange);
-
-        DrawTextEx(aestheticTitle,"OUTPUT", (Vector2){1000,30}, 80,2, Lavender);
-        DrawTextEx(aestheticTitle,"INPUT", (Vector2){150, 30}, 80,2, orange);
+        DrawTextEx(aestheticTitle,"OUTPUT", (Vector2){950,30}, 80,2, Lavender);
+        DrawTextEx(aestheticTitle,"INPUT", (Vector2){100, 120}, 80,2, orange);
 
 
-        DessinerBarreText(150, 275, 100,50, &BarreInsere, &framesCounter, &letterCount);
+        DessinerBarreText(100, 275, 100,50, &BarreInsere, &framesCounter, &letterCount);
 
-        dessinerBoutton(250,275,90,50,"Inserer",fontbot,&button_inserer, orange);
-
-
-        DessinerBarreText(150, 375, 100,50 ,&BarreCreer, &framesCounter1, &letterCount1);
-
-        dessinerBoutton(250,375,90,50,"Creer",fontbot, &button_creer, orange);
+        dessinerBoutton(200,275,90,50,"Inserer",fontbot,&button_inserer, orange);
 
 
-        DessinerBarreText(150, 475,100,50, &BarreRechercher, &framesCounter2, &letterCount2);
+        DessinerBarreText(100, 375, 100,50 ,&BarreCreer, &framesCounter1, &letterCount1);
 
-        dessinerBoutton(250,475,90,50," Recherche",fontbot, &button_rechercher, orange);
+        dessinerBoutton(200,375,90,50,"Creer",fontbot, &button_creer, orange);
 
 
-        DessinerBarreText(150,575, 100, 50, &BarreSupprimer ,&framesCounter3, &letterCount3);
+        DessinerBarreText(100, 475,100,50, &BarreRechercher, &framesCounter2, &letterCount2);
 
-        dessinerBoutton(250,575,90,50, "Supprimer",fontbot, &button_supprimer, orange);
+        dessinerBoutton(200,475,90,50," Recherche",fontbot, &button_rechercher, orange);
+
+
+        DessinerBarreText(100,575, 100, 50, &BarreSupprimer ,&framesCounter3, &letterCount3);
+
+        dessinerBoutton(200,575,90,50, "Supprimer",fontbot, &button_supprimer, orange);
 
 
         arbreMisAjour=false;
@@ -1125,7 +1128,7 @@ int main(void) {
 
 
         //button inserer
-        bool redendance;
+
 
         if ((button_inserer.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreInsere.mouseOn) )) && letterCount > 0) {
 
@@ -1133,18 +1136,22 @@ int main(void) {
            arbreMisAjour=true;
 
 
-            // Call the inserer function with the obtained value
+            ///Echec de l'insertion
             if (recherche(R, value)) {
-               DrawText(
-             "Cette valeur existe deja", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
+               strcpy(erreur_message,"    Cette valeur existe deja");
+
+              /* DrawText(
+             "Cette valeur existe deja", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2),
+                bonusRec.y+(bonusRec.height/2)+5,10, orange);*/
             }
                 else{
+                strcpy(erreur_message,"");
                 insertion(&R, value);
                 printf("\nValeur inseree !\nUpdate:\n");
                 infixe(R);
 
 
-                levelHeight = calculateSubtreeHeight(R) * 15.0f;
+                levelHeight = calculateSubtreeHeight(R) * 17.0f;
                 updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
             }
         }
@@ -1161,23 +1168,35 @@ int main(void) {
 
 
             // Call the inserer function with the obtained value
-            R= Creer_Arbre(max);
              if (max<0) {
-               DrawText(
-             "input non valide", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
-            }
-            // printf("\nValeur inseree !\nUpdate:\n");
-            infixe(R);
-            levelHeight = calculateSubtreeHeight(R) * 15.0f;
+                strcpy(erreur_message,"        Entree non valide");
 
-            ///Mettre a jour les coordonnees de l'arbre :
-            updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
+              /* DrawText(
+             "input non valide", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pas",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
+               */
+            }
+            else {
+             strcpy(erreur_message,"");
+             R= Creer_Arbre(max);
+             // printf("\nValeur inseree !\nUpdate:\n");
+             infixe(R);
+             levelHeight = calculateSubtreeHeight(R) * 17.0f;
+
+             ///Mettre a jour les coordonnees de l'arbre :
+             updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
+            }
 
         }
 
         //button recherche
         if ((button_rechercher.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreRechercher.mouseOn) )) && letterCount2 > 0) {
           int val = atoi(BarreRechercher.text);
+
+          //si une recherche qui a ete deja effectue : restaurer la couleur
+          if (trouv!=NULL){
+              trouv->noeudshape.col=gray;
+              trouv->noeudshape.infoCol=RAYWHITE;
+          }
 
           // Appel de la fonction recherche
           trouv = recherche_pointeur(R, val);
@@ -1186,31 +1205,39 @@ int main(void) {
           if (trouv != NULL) {
               trouv->noeudshape.col=orange;
               trouv->noeudshape.infoCol=WHITE;
+              strcpy(erreur_message,"");
             }
-            else DrawText(
-             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
-
+            else {
+               strcpy(erreur_message,"   Cette valeur n'existe pas");
+             /*DrawText(
+             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2),
+             bonusRec.y+(bonusRec.height/2)+5,10, orange);*/
+            }
         }
 
 
-         if (  (button_supprimer.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreSupprimer.mouseOn) ) ) && letterCount3 > 0){
+        if (  (button_supprimer.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreSupprimer.mouseOn) ) ) && letterCount3 > 0){
 
            arbreMisAjour=true;
             int value = atoi(BarreSupprimer.text);
 
 
             // Call the inserer function with the obtained value
-            if (!recherche(R, value)){  DrawText(
-             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);}
+            if (!recherche(R, value)){
+               strcpy(erreur_message,"Cette valeur n'existe pas");
+             /* DrawText(
+             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2),
+             bonusRec.y+(bonusRec.height/2)+5,10, orange);*/
+             }
              else{
+             strcpy(erreur_message,"");
+             R=supprimer(R, value);
+             // printf("\nValeur inseree !\nUpdate:\n");
+             infixe(R);
+             levelHeight = calculateSubtreeHeight(R) * 17.0f;
 
-            R=supprimer(R, value);
-            // printf("\nValeur inseree !\nUpdate:\n");
-            infixe(R);
-            levelHeight = calculateSubtreeHeight(R) * 15.0f;
-
-            ///Mettre a jour les coordonnees de l'arbre :
-            updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
+             ///Mettre a jour les coordonnees de l'arbre :
+             updateNodes(&R,  (recarbre.width/ 2 + recarbre.x) , 200, levelHeight);
              }
 
         }
@@ -1226,6 +1253,10 @@ int main(void) {
               trouv=NULL;
             }
        ///
+       if (strcmp(erreur_message,"")!=0){
+          DrawTextEx(font, erreur_message, (Vector2){bonusRec.x,bonusRec.y+43}, 20, 2, orange);
+            DrawRectangleLinesEx(bonusRec, 4, orange);
+       }
 
         drawTreeUpdates(R, font);
         EndDrawing();

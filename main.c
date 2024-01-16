@@ -5,9 +5,8 @@
 #include "raylib.h"
 #define MAX_INPUT_CHARS     4
 #define  RADIUS     20.0f
-#include <time.h>
-#include <math.h>
-#include <unistd.h>
+#include <time.h> //pour le random
+
 
 /**********************************************************************/
 
@@ -270,7 +269,7 @@ void infixe(arbre a) {
     if (ArbreVide(a)==0) {
         // 1er appel recursif
         infixe(fils_Gauche(a)); // fils_Gauche
-        printf("\n %d |", a->info); // noeud (racine)
+        printf(" %d |", a->info); // noeud (racine)
         //if(Pere(a)!=NULL) printf("\nLe pere de %d est %d", a->info, Pere(a)->info );
         // 2eme appel recursif
         infixe(fils_Droit(a)); // fils_Droit
@@ -430,9 +429,9 @@ void insertion(arbre * a, int val){
         }
         //printf("\nla nouvelle valeur = %d \n", r->info);
        // r->pere=father;
-        printf("\nWORKS ALL");
+        //printf("\nWORKS ALL");
      }
-     printf("\nValeur inserer");
+     //printf("\nValeur inserer");
 
     }
 
@@ -482,18 +481,6 @@ void updateNodes(arbre *a, float x, float y, float levelHeight) {
 //-----------------------------------------------------------------------------------------
 
 /** Suppression d'un noeud dans un arbre :**/
-
-///Fonction maximum qui retourne la plus grande valeur dans un arbre de recherche
-
-int maximum(arbre a){
-      if (ArbreVide(a->fd)){return a->info;}
-      //car si il n'y a aucun cote droit, cela veut dire qu'il n'ya aucune valeur plus petite que la valeur de a, donc a est le max
-      else {
-        return maximum(fils_Droit(a));
-      }
-}
-
-//-----------------------------------------------------------------------------------------
 
 arbre supprimer(arbre a, int val)
 {
@@ -559,7 +546,6 @@ arbre supprimer(arbre a, int val)
         return a;
     }
 }
-
 
 
 //-----------------------------------------------------------------------------------------
@@ -633,7 +619,6 @@ Vector2 point={x,y};
 
 
     //Dessiner le circle:
-    /*DrawCircle(int centerX, int centerY, float radius, Color color);*/
     DrawCircle(x, y, RADIUS,  r->noeudshape.col);
 
     //dessiner le text:
@@ -642,10 +627,6 @@ Vector2 point={x,y};
     /*DrawText(text,Center_x - MeasureText(text, taillePolice) / 2 , y - taillePolice / 2 , taillePolice, MAROON);*/
     /*TextFormat est pour obtenir cette variable "a->info" en format textuel*/
 
-   /* for (int i = 0; i < 15; ++i) {
-            float angle = (float)i * 0.1f;
-            DrawCircleLines(x , y , RADIUS + angle, gray);
-        }*/
       DrawTextEx(font,TextFormat("%d", (r)->info), (Vector2){x - MeasureText(TextFormat("%d", (r)->info), 20) / 2 , y - 20 / 2} , 20,2,r->noeudshape.infoCol);
 
 }
@@ -672,53 +653,6 @@ void DessinerBranche(arbre r) {
     }
 }
 
-//-----------------------------------------------------------------------------------------
-
-///Fontion qui dessine un arbre binaire de sorte que la largeur est traite (ENHANCED)
-
-/*
-void drawTree(arbre a, float x, float y, float levelHeight, Font font) {
-    if (ArbreVide(a)) return;
-
-   // Calculate la largeur d'un sous-arbre
-    float totalWidth = calculateSubtreeWidth(a);
-
-    //cette variable "xOffseta" represente le deplacement des branche sur l'axe (ox),
-    //chaque fois un nouveau noeud est ajoute, il faut regler ce deplacement pour eviter la collision entre les noeuds
-
-    // Le deplacement est en fonction  de la largeur/2
-    float xOffset = totalWidth / 2.0f;
-
-   // Dessin de la branche gauche
-    if (a->fg != NULL) {
-
-        //le noeud est a droite du noeud de centre (x,y) donc le deplacement est negative sur l'axe de (ox)
-        //le deplacement dans l'axe (oy) est constant et il est en fonction de l'hauteur de larbre courrant
-        //et le point d'arrive est en dessus du noeud c'est pour cette raison en fait " -Radius "
-
-        Vector2 startpoint = { x, y };
-        Vector2 endpoint = { x - xOffset, y + levelHeight };
-
-        //dessin de la fleche
-        DrawArrow(startpoint, endpoint, MAROON);
-        //appel recursif pour le dessin du sous arbre'
-        drawTree(a->fg, x - xOffset, y + levelHeight, levelHeight, font);
-    }
-
-    // Dessin de la branche droite
-    if (a->fd != NULL) {
-        Vector2 startpoint = { x, y };
-
-        //le noeud est a gauche du noeud de centre (x,y) donc le deplacement est positif sur l'axe de (ox)
-        Vector2 endpoint = { x + xOffset, y + levelHeight };
-        DrawArrow(startpoint, endpoint, MAROON);
-        drawTree(a->fd, x + xOffset, y + levelHeight, levelHeight, font);
-    }
-
-   // Dessiner le noeud a la fin pour que les fleches restent en dernier
-    DessinerNoeud(&a, x, y, WHITE, font);
-}
-*/
 
 //-----------------------------------------------------------------------------------------
 
@@ -887,51 +821,7 @@ Color orange= {244, 120, 66, 255};
 //-----------------------------------------------------------------------------------------
 
 
-
-
-///Main (Consol)
-
-/*int main() {
-    int n, x, i;
-
-    //initialiser l'arbre:
-    arbre R=NULL;
-
-    //on aura besoin du pere si on utilise la fonction insertion avec appel recursif :
-    //arbre pere;
-
-
-    printf("\nDonnez le nombre de valeurs a inserer: ");
-    scanf("%d", &n);
-
-
-
-    //si on fait l'insertion recursif, il faut creer la racine separement , et le i commence de '2' dans la boucle for
-    /*printf("\nDonnez la premiere valeur: ");
-    scanf("%d", &x);*/
-
-
-  /*  for (i = 1; i <= n; i++) {
-        printf("\nDonnez la valeur %d: ", i);
-        scanf("%d", &x);
-        insertion(&R,x);
-  //  }
-
-   /* printf("\n--------\nResultat:\n ");
-
-    printf("\nParcours infixe ( en ordre ) :\n");
-    infixe(R);
-
-    /*printf("\nDonner la valeur a supprimer : ");
-    scanf("%d", &x);
-    supprimer(&R,x,NULL);
-    infixe(R);*/
-/*
-    return 0;
-}*/
-
-
-//-----------------------------------------------------------------------------------------
+/**-------------------MAIN-------------------**/
 
 
 ///Main GUI
@@ -978,7 +868,6 @@ int main(void) {
     arbre R; //l'arbre qu'on est entrain de manipuler en cours de ce programme
     arbre trouv; //un pointeur qu'on va utiliser l'ors de la recherche d'une valeur dans un arbre
     bool arbreMisAjour; //on aura besoin de cette variable lors de la recherche d'une valeur dans un arbre
-    bool erreur=false;
     char erreur_message[100];
 
     ///Couleurs
@@ -1019,30 +908,20 @@ int main(void) {
     //frames  par second : 60
     SetTargetFPS(60);
 
-    //Polices utilise :
-    Font customFont = LoadFontEx("Poppins-Black.ttf", 50, 0,0);
-    Font font =  LoadFontEx("Poppins-Medium.ttf", 20, 0, 0);
-    Font fontbot =  LoadFontEx("Poppins-Medium.ttf", 18, 0, 0);
+    //Polices et images utilise :
+    Font font =  LoadFontEx("Poppins-Medium.ttf", 20, 0, 0); //size : 20
+    Font fontbot =  LoadFontEx("Poppins-Medium.ttf", 18, 0, 0); //size : 18
     Font aestheticTitle= LoadFontEx("roygendisplay-regular.ttf", 80,0,0);
-
     Image WelcomeImage = LoadImage("welcomeImage.png");
     Texture2D ImageTexture = LoadTextureFromImage(WelcomeImage);
-
-    Image BackgroundImage = LoadImage("projectBack.png");
-    Texture2D backgroundTexture = LoadTextureFromImage(BackgroundImage);
+    //intialisation du message d'erreur:
     strcpy(erreur_message,"");
 
-
+   ///Welcome Page
    while (!WindowShouldClose()) {
         BeginDrawing();
         DrawTexture(ImageTexture, 0, 0, WHITE);
-
-
-       /* DrawText("Welcome !", width / 4, height / 3, 40, DARKGRAY);
-        DrawText("Press Enter to start", width / 4 + 40, height / 2, 20, GRAY);*/
-
         EndDrawing();
-
         if (IsKeyPressed(KEY_ENTER)) {
             break; // Exit the welcome loop if Enter is pressed
         }
@@ -1056,12 +935,9 @@ int main(void) {
 
         BeginDrawing();
 
-        DrawTexture(backgroundTexture, 0, 0, WHITE);
 
 
         Rectangle buttonsRec = {100, 150, 300,600 };
-
-        ///DrawRectangleLinesEx(buttonsRec, 4, orange);
 
         Rectangle recarbre = {350, 120, GetScreenWidth()-350-30,GetScreenHeight()-120-30 };
 
@@ -1120,15 +996,13 @@ int main(void) {
       }
 
 
-
         /**Remarque :
         Sans ces conditions le cursor va se mettre dans un etat infinie de changement entre IBM et POINTING HAND et DEFAULT
         **/
 
 
-
-        //button inserer
-
+      ///Action Listeners :
+        ///Boutton Insertion
 
         if ((button_inserer.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreInsere.mouseOn) )) && letterCount > 0) {
 
@@ -1156,11 +1030,7 @@ int main(void) {
             }
         }
 
-
-
-
-
-
+       ///Boutton Creation
         if (  (button_creer.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreCreer.mouseOn) ) ) && letterCount1 > 0){
 
            arbreMisAjour=true;
@@ -1170,10 +1040,6 @@ int main(void) {
             // Call the inserer function with the obtained value
              if (max<0) {
                 strcpy(erreur_message,"        Entree non valide");
-
-              /* DrawText(
-             "input non valide", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pas",10)/2), bonusRec.y+(bonusRec.height/2)+5,10, orange);
-               */
             }
             else {
              strcpy(erreur_message,"");
@@ -1188,7 +1054,7 @@ int main(void) {
 
         }
 
-        //button recherche
+        ///button recherche
         if ((button_rechercher.pressed || (IsKeyPressed(KEY_ENTER)&& (BarreRechercher.mouseOn) )) && letterCount2 > 0) {
           int val = atoi(BarreRechercher.text);
 
@@ -1209,9 +1075,6 @@ int main(void) {
             }
             else {
                strcpy(erreur_message,"   Cette valeur n'existe pas");
-             /*DrawText(
-             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2),
-             bonusRec.y+(bonusRec.height/2)+5,10, orange);*/
             }
         }
 
@@ -1225,9 +1088,6 @@ int main(void) {
             // Call the inserer function with the obtained value
             if (!recherche(R, value)){
                strcpy(erreur_message,"Cette valeur n'existe pas");
-             /* DrawText(
-             "Cette valeur n'existe pas", bonusRec.x +(bonusRec.width/2)- (MeasureText("Cette valeur n'existe pax",10)/2),
-             bonusRec.y+(bonusRec.height/2)+5,10, orange);*/
              }
              else{
              strcpy(erreur_message,"");
@@ -1268,10 +1128,12 @@ int main(void) {
     ///Liberation & Unloadings
     LibererArbre(R);
     LibererArbre(trouv);
-    UnloadFont(customFont);
+
     UnloadFont(font);
     UnloadFont(fontbot);
     UnloadFont(aestheticTitle);
+    UnloadTexture(ImageTexture);
+    UnloadImage(WelcomeImage);
 
     return 0;
 }
